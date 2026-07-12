@@ -1,155 +1,238 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI PDF Analyzer</title>
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <style>
-        .chat-box::-webkit-scrollbar { width: 6px; }
-        .chat-box::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 4px; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI PDF Analyzer</title>
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<style>
+.chat-box::-webkit-scrollbar{width:6px}
+.chat-box::-webkit-scrollbar-thumb{background:#94a3b8;border-radius:6px}
+</style>
 </head>
-<body class="bg-slate-50 font-sans min-h-screen flex flex-col items-center justify-center p-4">
+<body class="bg-slate-100 min-h-screen flex items-center justify-center p-4">
 
-    <div class="w-full max-w-4xl bg-white shadow-xl rounded-2xl border border-slate-100 overflow-hidden flex flex-col md:flex-row h-[85vh]">
-        
-        <div class="w-full md:w-1/3 bg-slate-900 text-white p-6 flex flex-col justify-between border-b md:border-b-0 md:border-r border-slate-800">
-            <div>
-                <h1 class="text-2xl font-bold tracking-tight text-blue-400 mb-2">AI PDF Analyzer</h1>
-                <p class="text-xs text-slate-400 mb-6">Upload documents and extract insights with Google Gemini.</p>
-                
-                <div class="border-2 border-dashed border-slate-700 hover:border-blue-400 rounded-xl p-6 text-center cursor-pointer transition relative bg-slate-800/50">
-                    <input type="file" id="pdfFile" accept=".pdf" class="absolute inset-0 opacity-0 cursor-pointer" onchange="uploadPDF()" />
-                    <div class="text-3xl mb-2">📄</div>
-                    <p class="text-sm font-medium text-slate-200" id="uploadStatus">Click or drag PDF here</p>
-                    <p class="text-xs text-slate-500 mt-1">Supports files up to 10MB</p>
-                </div>
-            </div>
-            
-            <div class="text-center md:text-left">
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-900/50 text-blue-300 border border-blue-800" id="statusBadge">
-                    Status: Idle
-                </span>
-            </div>
-        </div>
+<div class="w-full max-w-6xl h-[90vh] bg-white rounded-2xl shadow-xl overflow-hidden flex">
 
-        <div class="w-full md:w-2/3 flex flex-col h-full bg-slate-100">
-            <div id="chatBox" class="chat-box flex-1 p-6 overflow-y-auto space-y-4">
-                <div class="flex items-start gap-3">
-                    <div class="bg-blue-600 text-white p-2 rounded-lg text-sm">🤖</div>
-                    <div class="bg-white p-3 rounded-xl shadow-xs text-sm max-w-[80%] text-slate-700">
-                        Hello! Upload a PDF on the left sidebar, and I'll break down its insights right here.
-                    </div>
-                </div>
-            </div>
+<!-- Sidebar -->
+<div class="w-80 bg-slate-900 text-white p-6 flex flex-col justify-between">
 
-            <div class="p-4 bg-white border-t border-slate-200 flex gap-2">
-                <input type="text" id="queryInput" placeholder="Ask a question about your PDF..." disabled
-                    class="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-hidden focus:border-blue-500 disabled:bg-slate-100 disabled:cursor-not-allowed"
-                    onkeydown="if(event.key === 'Enter') askQuestion()" />
-                <button id="sendBtn" onclick="askQuestion()" disabled
-                    class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-xl text-sm font-semibold transition disabled:bg-slate-300 disabled:cursor-not-allowed">
-                    Send
-                </button>
-            </div>
-        </div>
-    </div>
+<div>
+<h1 class="text-3xl font-bold text-blue-400">AI PDF Analyzer</h1>
+<p class="text-slate-400 text-sm mt-2">
+Upload a PDF and ask questions using Gemini AI.
+</p>
 
-    <script>
-        const API_URL = "https://ai-pdf-analyzer-rq4o.onrender.com";
+<div class="mt-8 border-2 border-dashed border-slate-700 rounded-xl p-6 text-center relative hover:border-blue-500 transition">
 
-        async function uploadPDF() {
-            const fileInput = document.getElementById("pdfFile");
-            const statusText = document.getElementById("uploadStatus");
-            const badge = document.getElementById("statusBadge");
-            
-            if (!fileInput.files[0]) return;
+<input id="pdfFile"
+type="file"
+accept=".pdf"
+class="absolute inset-0 opacity-0 cursor-pointer"
+onchange="uploadPDF()">
 
-            const formData = new FormData();
-            formData.append("file", fileInput.files[0]);
+<div class="text-5xl">📄</div>
 
-            statusText.innerText = "Processing vector shards...";
-            badge.innerText = "Status: Embedding File...";
-            badge.className = "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-900/50 text-amber-300 border border-amber-800";
+<p id="uploadStatus" class="mt-4 text-sm">
+Click to upload PDF
+</p>
 
-            try {
-                const response = await fetch(`${API_URL}/upload`, {
-                    method: "POST",
-                    body: formData
-                });
-                const data = await response.json();
+<p class="text-xs text-slate-500 mt-2">
+PDF only
+</p>
 
-                if (response.ok) {
-                    statusText.innerText = `Loaded: ${fileInput.files[0].name}`;
-                    badge.innerText = "Status: Ready to Chat";
-                    badge.className = "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-900/50 text-emerald-300 border border-emerald-800";
-                    document.getElementById("queryInput").disabled = false;
-                    document.getElementById("sendBtn").disabled = false;
-                } else {
-                    alert(`Error: ${data.detail}`);
-                    resetUpload();
-                }
-            } catch (err) {
-                alert("Could not connect to FastAPI server. Make sure your backend is running!");
-                resetUpload();
-            }
-        }
+</div>
 
-        async function askQuestion() {
-            const input = document.getElementById("queryInput");
-            const chatBox = document.getElementById("chatBox");
-            const question = input.value.trim();
+<button
+onclick="newChat()"
+class="w-full mt-6 bg-red-600 hover:bg-red-700 rounded-xl py-3 font-semibold">
+🗑 New Chat
+</button>
 
-            if (!question) return;
+</div>
 
-            // Append User Question Bubble
-            chatBox.innerHTML += `
-                <div class="flex items-start gap-3 justify-end">
-                    <div class="bg-blue-600 text-white p-3 rounded-xl shadow-xs text-sm max-w-[80%]">${question}</div>
-                    <div class="bg-slate-300 text-slate-800 p-2 rounded-lg text-sm">👤</div>
-                </div>`;
-            
-            input.value = "";
-            chatBox.scrollTop = chatBox.scrollHeight;
+<div>
+<span id="statusBadge"
+class="inline-block bg-blue-800 px-3 py-2 rounded-lg text-xs">
+Status : Idle
+</span>
+</div>
 
-            // Append Loading Thinking Indicator
-            const loaderId = "loader-" + Date.now();
-            chatBox.innerHTML += `
-                <div class="flex items-start gap-3" id="${loaderId}">
-                    <div class="bg-blue-600 text-white p-2 rounded-lg text-sm">🤖</div>
-                    <div class="bg-white p-3 rounded-xl shadow-xs text-sm text-slate-400 italic">Gemini is thinking...</div>
-                </div>`;
-            chatBox.scrollTop = chatBox.scrollHeight;
+</div>
 
-            try {
-                const response = await fetch(`${API_URL}/ask`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ question: question })
-                });
-                const data = await response.json();
-                
-                document.getElementById(loaderId).remove();
+<!-- Chat -->
+<div class="flex-1 flex flex-col">
 
-                // Append Gemini Answer Bubble
-                chatBox.innerHTML += `
-                    <div class="flex items-start gap-3">
-                        <div class="bg-blue-600 text-white p-2 rounded-lg text-sm">🤖</div>
-                        <div class="bg-white p-3 rounded-xl shadow-xs text-sm max-w-[80%] text-slate-700 whitespace-pre-line">${data.answer}</div>
-                    </div>`;
-            } catch (err) {
-                document.getElementById(loaderId).remove();
-                alert("Error resolving answer sequence.");
-            }
-            chatBox.scrollTop = chatBox.scrollHeight;
-        }
+<div id="chatBox"
+class="flex-1 overflow-y-auto chat-box p-6 bg-slate-50 space-y-4">
 
-        function resetUpload() {
-            document.getElementById("uploadStatus").innerText = "Click or drag PDF here";
-            document.getElementById("statusBadge").innerText = "Status: Idle";
-            document.getElementById("statusBadge").className = "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-900/50 text-blue-300 border border-blue-800";
-        }
-    </script>
+<div class="flex gap-3">
+<div class="bg-blue-600 text-white p-2 rounded-lg">🤖</div>
+<div class="bg-white shadow rounded-xl p-4 max-w-xl">
+Hello! Upload a PDF and start asking questions.
+</div>
+</div>
+
+</div>
+
+<div class="border-t bg-white p-4 flex gap-3">
+
+<input
+id="queryInput"
+disabled
+onkeydown="if(event.key==='Enter') askQuestion()"
+placeholder="Ask about your PDF..."
+class="flex-1 border rounded-xl px-4 py-3 outline-none">
+
+<button
+id="sendBtn"
+disabled
+onclick="askQuestion()"
+class="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-6 rounded-xl">
+Send
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+const API_URL="https://ai-pdf-analyzer-rq4o.onrender.com";
+
+function botMessage(text){
+const chat=document.getElementById("chatBox");
+chat.innerHTML+=`
+<div class="flex gap-3">
+<div class="bg-blue-600 text-white p-2 rounded-lg">🤖</div>
+<div class="bg-white shadow rounded-xl p-4 max-w-xl whitespace-pre-wrap">${text}</div>
+</div>`;
+chat.scrollTop=chat.scrollHeight;
+}
+
+function userMessage(text){
+const chat=document.getElementById("chatBox");
+chat.innerHTML+=`
+<div class="flex justify-end gap-3">
+<div class="bg-blue-600 text-white rounded-xl p-4 max-w-xl">${text}</div>
+<div class="bg-slate-300 rounded-lg p-2">👤</div>
+</div>`;
+chat.scrollTop=chat.scrollHeight;
+}
+
+function resetUpload(){
+document.getElementById("uploadStatus").innerText="Click to upload PDF";
+document.getElementById("statusBadge").innerText="Status : Idle";
+document.getElementById("queryInput").disabled=true;
+document.getElementById("sendBtn").disabled=true;
+document.getElementById("pdfFile").value="";
+}
+
+async function uploadPDF(){
+
+const file=document.getElementById("pdfFile").files[0];
+if(!file)return;
+
+const fd=new FormData();
+fd.append("file",file);
+
+document.getElementById("uploadStatus").innerText="Uploading...";
+document.getElementById("statusBadge").innerText="Status : Processing";
+
+try{
+
+const res=await fetch(`${API_URL}/upload`,{
+method:"POST",
+body:fd
+});
+
+const data=await res.json();
+
+if(!res.ok){
+alert(data.detail);
+resetUpload();
+return;
+}
+
+document.getElementById("uploadStatus").innerText=file.name;
+document.getElementById("statusBadge").innerText="Status : Ready";
+document.getElementById("queryInput").disabled=false;
+document.getElementById("sendBtn").disabled=false;
+
+botMessage("PDF uploaded successfully. Ask me anything about it.");
+
+}catch(e){
+alert("Backend unavailable.");
+resetUpload();
+}
+
+}
+
+async function askQuestion(){
+
+const input=document.getElementById("queryInput");
+const q=input.value.trim();
+
+if(!q)return;
+
+userMessage(q);
+input.value="";
+
+botMessage("Thinking...");
+
+const chat=document.getElementById("chatBox");
+const loading=chat.lastElementChild;
+
+try{
+
+const res=await fetch(`${API_URL}/ask`,{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+question:q
+})
+});
+
+const data=await res.json();
+
+loading.remove();
+
+botMessage(data.answer);
+
+}catch(e){
+
+loading.remove();
+botMessage("Unable to generate an answer.");
+
+}
+
+}
+
+async function newChat(){
+
+try{
+await fetch(`${API_URL}/new-chat`,{
+method:"POST"
+});
+}catch(e){}
+
+document.getElementById("chatBox").innerHTML=`
+<div class="flex gap-3">
+<div class="bg-blue-600 text-white p-2 rounded-lg">🤖</div>
+<div class="bg-white shadow rounded-xl p-4 max-w-xl">
+New conversation started. Upload a PDF to continue.
+</div>
+</div>`;
+
+resetUpload();
+
+}
+
+</script>
+
 </body>
 </html>
