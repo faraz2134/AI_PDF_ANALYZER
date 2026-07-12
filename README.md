@@ -76,7 +76,7 @@ AI_PDF_ANALYZER/
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/your-username/AI_PDF_ANALYZER.git
+git clone https://github.com/faraz2134/AI_PDF_ANALYZER.git
 cd AI_PDF_ANALYZER
 ```
 
@@ -220,7 +220,7 @@ pip install -r requirements.txt
 
 ## 👨‍💻 Author
 
-**Akmal Faraz**
+**Md Akmal Faraz**
 
 B.Tech Computer Science Engineering
 
